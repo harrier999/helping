@@ -10,3 +10,5 @@ CHROMA_METADATA = {"hnsw:space":"l2"}
 COLLECTION_NAME = "naver_shopping"
 
 SERVER_PORT = 8888
+
+CHROMA_PORT = 8000
