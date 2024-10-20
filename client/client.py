@@ -13,6 +13,7 @@ WEBSOCKET_URL = f"ws://localhost:{settings.SERVER_PORT}/ws"  # 여기에 실제 
 # 메시지를 수신하는 콜백 함수
 def on_message(ws, message):
     print(f"\n상담사: {message}")  # 수신한 메시지를 출력
+    print("\n")
     global waiting_for_response
     waiting_for_response = False  # 응답을 받았으므로 대기 상태 해제
 
@@ -21,7 +22,7 @@ def on_open(ws):
     def run(*args):
         global waiting_for_response
         while True:
-            message = input("Enter message: ")  # 사용자 입력 받기
+            message = input("사용자: ")  # 사용자 입력 받기
             waiting_for_response = True  # 응답 대기 상태로 설정
             ws.send(message)  # 메시지 전송
 
