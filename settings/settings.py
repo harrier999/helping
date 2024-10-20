@@ -5,7 +5,7 @@ if not API_KEY:
     raise ValueError("OPENAI_API_KEY is not set")
 EMBEDING_MODEL =  "text-embedding-3-large"
 CHAT_MODEL = "gpt-4o"
-CHROMA_METADATA = {"hnsw:space":"l2"}
+CHROMA_METADATA = {"hnsw:space":"cosine"}
 
 COLLECTION_NAME = "naver_shopping"
 
