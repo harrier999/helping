@@ -1,60 +1,65 @@
+import os
+import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root)
+
 import pickle
 import logging
-import os
+
 import chromadb
 import openai
 from chromadb.utils.embedding_functions import openai_embedding_function
 from chroma import get_client
+from settings import settings
 
 logging.basicConfig(level=logging.INFO)
 
-API_KEY = os.getenv("OPENAI_API_KEY")
-if not API_KEY:
-    raise ValueError("OPENAI_API_KEY is not set")
+API_KEY = settings.API_KEY
+MODEL = settings.EMBEDING_MODEL
+METADATA = settings.CHROMA_METADATA
 openai.api_key = API_KEY
-MODEL = "text-embedding-3-large"
 
-metadata={"hnsw:space":"l2"}
+METADATA={"hnsw:space":"l2"}
 
 class DataLoader:
-    collection_name = "naver_shopping"
+    collection_name = settings.COLLECTION_NAME
     
     def __init__(self, chroma_client: chromadb.ClientAPI):
         self.client = chroma_client
         try:
             self.collection = self.client.get_collection(self.collection_name)
         except Exception as e:
-            self.collection = self.client.create_collection(self.collection_name, metadata=metadata)
+            self.collection = self.client.create_collection(self.collection_name, metadata=METADATA)
 
     def save_data(self, data: dict):
         """
         데이터를 데이터베이스에 저장합니다.
         """
         embedding_function = openai_embedding_function.OpenAIEmbeddingFunction(api_key=API_KEY, model_name=MODEL)
-        self.client.create_collection(self.collection_name, metadata=metadata, embedding_function=embedding_function)
+        self.collection = self.client.create_collection(self.collection_name, metadata=METADATA, embedding_function=embedding_function)
         
         questions = data.keys()
         answers = data.values()
         
         resp = openai.embeddings.create(input=list(questions)[:2000], model=MODEL)
-        embeddings = resp.data
+        embeddings = [embedding.embedding for embedding in resp.data]
         
         self.collection.add(
-            ids=list(questions),
+            ids=list(questions)[:2000],
             embeddings=embeddings,
-            documents=list(answers),
+            documents=list(answers)[:2000],
         )
         
         resp = openai.embeddings.create(input=list(questions)[2000:], model=MODEL)
-        embeddings = resp.data
+        embeddings = [embedding.embedding for embedding in resp.data]
         
         self.collection.add(
-            ids=list(questions),
+            ids=list(questions)[2000:],
             embeddings=embeddings,
-            documents=list(answers),
+            documents=list(answers)[2000:],
         )
         
-        logging.INFO("Data is saved to ChromaDB.")
+        logging.info("Data is saved to ChromaDB.")
 
     def delete_data(self):
         """
@@ -77,7 +82,7 @@ if __name__ == "__main__":
     data_loader.delete_data()
     
     logging.info("Loading data from pkl file...")
-    data = data_loader.load_data_from_pkl('./data/refined_data.pkl')
+    data = data_loader.load_data_from_pkl('core/data/refined_data.pkl')
     
     logging.info("Saving data to ChromaDB...")
     data_loader.save_data(data)
