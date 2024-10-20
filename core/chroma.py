@@ -6,7 +6,7 @@ from settings import settings
 def get_client() -> chromadb.ClientAPI:
     logging.info("Connecting to ChromaDB")
     chroma_client = chromadb.HttpClient(
-        host=f"http://localhost:f{settings.CHROMA_PORT}",
+        host=f"http://localhost:{settings.CHROMA_PORT}",
         ssl=False,
         headers=None,
         settings=chromadb.config.Settings(),
