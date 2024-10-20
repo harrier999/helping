@@ -2,11 +2,13 @@ import os
 import sys
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
+import logging
 from fastapi import FastAPI, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from settings import settings
 from core import chatbot, chatting
 
+logging.basicConfig(level=logging.INFO)
 app = FastAPI()
 
 @app.websocket("/ws")
@@ -17,14 +19,14 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            print(data)
+            logging.info(data)
             chatting_room.add_chat(chatting.UserChat(data))
             response = chat_bot.get_response(chatting_room)
-            print(response)
+            logging.info(response)
             chatting_room.add_chat(chatting.BotChat(response))
             await websocket.send_text(f"{response}")
     except WebSocketDisconnect:
-        print("Client disconnected")
+        logging.warn("Client disconnected")
 
 if __name__ == "__main__":
     import uvicorn
